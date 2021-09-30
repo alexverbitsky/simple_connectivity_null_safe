@@ -22,17 +22,15 @@ class Connectivity {
   // EventChannel because it is overridden. Forcing the class to be a singleton class can prevent
   // misusage of creating a second instance from a programmer.
   factory Connectivity() {
-    if (_singleton == null) {
-      _singleton = Connectivity._();
-    }
-    return _singleton;
+    _singleton ??= Connectivity._();
+    return _singleton!;
   }
 
   Connectivity._();
 
-  static Connectivity _singleton;
+  static late Connectivity? _singleton;
 
-  Stream<ConnectivityResult> _onConnectivityChanged;
+  Stream<ConnectivityResult>? _onConnectivityChanged;
 
   @visibleForTesting
   static const MethodChannel methodChannel = MethodChannel(
@@ -46,12 +44,10 @@ class Connectivity {
 
   /// Fires whenever the connectivity state changes.
   Stream<ConnectivityResult> get onConnectivityChanged {
-    if (_onConnectivityChanged == null) {
-      _onConnectivityChanged = eventChannel
+    _onConnectivityChanged ??= eventChannel
           .receiveBroadcastStream()
           .map((dynamic event) => _parseConnectivityResult(event));
-    }
-    return _onConnectivityChanged;
+    return _onConnectivityChanged!;
   }
 
   /// Checks the connection status of the device.
@@ -60,8 +56,13 @@ class Connectivity {
   /// make a network request. It only gives you the radio status.
   ///
   /// Instead listen for connectivity changes via [onConnectivityChanged] stream.
-  Future<ConnectivityResult> checkConnectivity() async {
-    final String result = await methodChannel.invokeMethod<String>('check');
+  Future<ConnectivityResult?> checkConnectivity() async {
+    final String? result = await methodChannel.invokeMethod<String>('check');
+
+    if (result == null) {
+      return Future.value(null);
+    }
+
     return _parseConnectivityResult(result);
   }
 }
